@@ -1,9 +1,9 @@
 const jwt = require("jsonwebtoken");
-const User = require("../models/user.model");
+const User = require("../models/User");
 
 const authMiddleware = async (req, res, next) => {
     try {
-        const token = req.cookies?.accessToken;
+        const token = req.cookies?.token;
 
         // if no token found
         if (!token) {
