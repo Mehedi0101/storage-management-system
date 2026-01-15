@@ -1,10 +1,12 @@
+// external imports
 const express = require("express");
 const cors = require("cors");
 
-const { authRouter } = require('./routes/authRouter');
-const { userRouter } = require('./routes/userRouter');
-const { fileRouter } = require('./routes/fileRouter');
-const { dashboardRouter } = require('./routes/dashboardRouter');
+// internal imports
+const authRouter = require('./routes/authRouter');
+const userRouter = require('./routes/userRouter');
+const fileRouter = require('./routes/fileRouter');
+const dashboardRouter = require('./routes/dashboardRouter');
 
 const errorHandler = require("./middlewares/errorHandlers");
 
@@ -24,7 +26,7 @@ app.use("/api/users", userRouter);
 app.use("/api/files", fileRouter);
 app.use("/api/dashboard", dashboardRouter);
 
-/* -------------------- Health Check -------------------- */
+/* -------------------- Entry point -------------------- */
 app.get("/", (req, res) => {
     res.status(200).json({
         success: true,

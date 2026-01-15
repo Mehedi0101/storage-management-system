@@ -2,4 +2,4 @@ const express = require('express');
 
 const dashboardRouter = express.Router();
 
-module.exports = { dashboardRouter };
+module.exports = dashboardRouter;
