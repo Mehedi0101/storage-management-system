@@ -28,10 +28,7 @@ app.use("/api/dashboard", dashboardRouter);
 
 /* -------------------- Entry point -------------------- */
 app.get("/", (req, res) => {
-    res.status(200).json({
-        success: true,
-        message: "Storage Management System API is running",
-    });
+    res.send("Storage Management System API is running");
 });
 
 /* -------------------- Error Handler -------------------- */
