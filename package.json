@@ -1,0 +1,12 @@
+{
+  "name": "storage-management-system",
+  "version": "1.0.0",
+  "description": "This storage management system is built with node.js, express.js and mongoDB",
+  "license": "ISC",
+  "author": "Mehedi Hasan",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
