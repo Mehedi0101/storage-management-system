@@ -4,6 +4,9 @@ const bcrypt = require("bcrypt");
 // internal imports
 const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
+const PasswordReset = require("../models/PasswordReset");
+const generateCode = require("../utils/generateCode");
+const sendEmail = require("../utils/codeSendingEmail");
 
 
 // register
@@ -50,6 +53,8 @@ const login = async (req, res, next) => {
         const { email, password } = req.body;
 
         const user = await User.findOne({ email }).select("+password");
+
+        // if no user found from body
         if (!user) {
             const error = new Error("Invalid email or password");
             error.statusCode = 401;
@@ -57,25 +62,29 @@ const login = async (req, res, next) => {
         }
 
         const isPasswordMatch = await bcrypt.compare(password, user.password);
+
+        // if password don't match
         if (!isPasswordMatch) {
             const error = new Error("Invalid email or password");
             error.statusCode = 401;
             throw error;
         }
 
+        // token generation
         const token = generateToken({
             userId: user._id,
             email: user.email,
         });
 
-        // 🔐 Set HTTP-only cookie
+        // cookie response
         res.cookie("token", token, {
             httpOnly: true,
-            secure: false, // set true in production (HTTPS)
+            secure: false, // have to set true in production
             sameSite: "strict",
-            maxAge: 24 * 60 * 60 * 1000, // 1 day
+            maxAge: 24 * 60 * 60 * 1000,
         });
 
+        // success response
         res.status(200).json({
             success: true,
             message: "Login successful",
@@ -92,6 +101,140 @@ const login = async (req, res, next) => {
     }
 };
 
+// forgotPassword
+const forgotPassword = async (req, res, next) => {
+    try {
+        const { email } = req.body;
+
+        const user = await User.findOne({ email });
+
+        // if no user found
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message: "No user found associated with this email address",
+            });
+        }
+
+        const code = generateCode();
+        const hashedCode = await bcrypt.hash(code, 10);
+
+        // password reset code
+        await PasswordReset.create({
+            userId: user._id,
+            code: hashedCode,
+            expiresAt: new Date(Date.now() + 10 * 60 * 1000),
+        });
+
+        // send code through email
+        await sendEmail({
+            to: email,
+            subject: "Password Reset Code",
+            text: `Your password reset code is ${code}`,
+        });
+
+        // success response
+        res.status(200).json({
+            success: true,
+            message: "Verification code sent",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// verifyCode
+const verifyCode = async (req, res, next) => {
+    try {
+        const { email, code } = req.body;
+
+        const user = await User.findOne({ email });
+
+        // if no user found
+        if (!user) {
+            const err = new Error("Invalid code");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const resetRecord = await PasswordReset.findOne({
+            userId: user._id,
+            isUsed: false,
+            expiresAt: { $gt: new Date() },
+        }).select("+code");
+
+        if (!resetRecord) {
+            const err = new Error("Invalid or expired code");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const isMatch = await bcrypt.compare(code, resetRecord.code);
+        if (!isMatch) {
+            const err = new Error("Invalid or expired code");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        res.status(200).json({
+            success: true,
+            message: "Code verified",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+// reset password
+const resetPassword = async (req, res, next) => {
+    try {
+        const { email, code, newPassword } = req.body;
+
+        const user = await User.findOne({ email });
+
+        // if no user found
+        if (!user) {
+            const err = new Error("Invalid request");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const resetRecord = await PasswordReset.findOne({
+            userId: user._id,
+            isUsed: false,
+            expiresAt: { $gt: new Date() },
+        }).select("+code");
+
+        if (!resetRecord) {
+            const err = new Error("Invalid or expired code");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        const isMatch = await bcrypt.compare(code, resetRecord.code);
+        if (!isMatch) {
+            const err = new Error("Invalid or expired code");
+            err.statusCode = 400;
+            throw err;
+        }
+
+        user.password = await bcrypt.hash(newPassword, 10);
+        await user.save();
+
+        resetRecord.isUsed = true;
+        await resetRecord.save();
+
+        res.status(200).json({
+            success: true,
+            message: "Password reset successful",
+        });
+    } catch (error) {
+        next(error);
+    }
+};
+
+
+
 // logout
 const logout = (req, res) => {
     res.clearCookie("token");
@@ -104,5 +247,8 @@ const logout = (req, res) => {
 module.exports = {
     register,
     login,
-    logout
+    logout,
+    forgotPassword,
+    verifyCode,
+    resetPassword
 };

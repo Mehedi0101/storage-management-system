@@ -15,7 +15,31 @@ const loginSchema = z.object({
     }),
 });
 
+const forgotPasswordSchema = z.object({
+    body: z.object({
+        email: z.string().email("Invalid email"),
+    }),
+});
+
+const verifyCodeSchema = z.object({
+    body: z.object({
+        email: z.string().email(),
+        code: z.string().length(6, "Invalid code"),
+    }),
+});
+
+const resetPasswordSchema = z.object({
+    body: z.object({
+        email: z.string().email(),
+        code: z.string().length(6),
+        newPassword: z.string().min(6, "Password must be at least 6 characters"),
+    }),
+});
+
 module.exports = {
     registerSchema,
-    loginSchema
+    loginSchema,
+    forgotPasswordSchema,
+    verifyCodeSchema,
+    resetPasswordSchema
 };
