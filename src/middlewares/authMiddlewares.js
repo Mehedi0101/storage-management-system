@@ -1,26 +1,39 @@
 const jwt = require("jsonwebtoken");
+const User = require("../models/user.model");
 
-const authMiddleware = (req, res, next) => {
-    const token = req.cookies?.token;
-
-    // if no token found
-    if (!token) {
-        return res.status(401).json({
-            success: false,
-            message: "Unauthorized",
-        });
-    }
-
+const authMiddleware = async (req, res, next) => {
     try {
+        const token = req.cookies?.accessToken;
+
+        // if no token found
+        if (!token) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized. Token missing.",
+            });
+        }
+
+        // token verification
         const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-        // token verification successful
-        req.user = decoded;
+        // get user if token verification successful
+        const user = await User.findById(decoded.userId).select("-password");
+
+        // if no user found
+        if (!user) {
+            return res.status(401).json({
+                success: false,
+                message: "Unauthorized. User not found.",
+            });
+        }
+
+        // if user found
+        req.user = user;
         next();
     } catch (error) {
         return res.status(401).json({
             success: false,
-            message: "Invalid or expired token",
+            message: "Unauthorized. Invalid or expired token.",
         });
     }
 };
