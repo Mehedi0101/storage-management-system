@@ -1,3 +1,5 @@
+const { ZodError } = require("zod");
+
 const validate = (schema) => (req, res, next) => {
     try {
         schema.parse({
@@ -7,10 +9,14 @@ const validate = (schema) => (req, res, next) => {
         });
         next();
     } catch (error) {
-        res.status(400).json({
-            success: false,
-            message: error.errors[0].message,
-        });
+        if (error instanceof ZodError) {
+            return res.status(400).json({
+                success: false,
+                message: error.issues?.[0]?.message || "Invalid request data",
+            });
+        }
+
+        next(error);
     }
 };
 
