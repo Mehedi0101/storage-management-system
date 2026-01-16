@@ -6,7 +6,7 @@ const storage = multer.diskStorage({
         const isImage = file.mimetype.startsWith("image/");
         cb(
             null,
-            isImage ? "src/uploads/images" : "src/uploads/documents"
+            isImage ? "src/uploads/images" : "src/uploads/pdfs"
         );
     },
 

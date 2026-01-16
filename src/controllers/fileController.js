@@ -70,7 +70,48 @@ const toggleFavorite = async (req, res) => {
     }
 };
 
+const getFilesByDate = async (req, res) => {
+    try {
+        const { date } = req.query;
+
+        if (!date) {
+            return res.status(400).json({
+                success: false,
+                message: "Date query parameter is required (YYYY-MM-DD)",
+            });
+        }
+
+        // Start and end of the day
+        const startDate = new Date(date);
+        startDate.setHours(0, 0, 0, 0);
+
+        const endDate = new Date(date);
+        endDate.setHours(23, 59, 59, 999);
+
+        const files = await File.find({
+            user: req.user._id,
+            createdAt: {
+                $gte: startDate,
+                $lte: endDate,
+            },
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            count: files.length,
+            data: files,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch files",
+        });
+    }
+};
+
+
 module.exports = {
     uploadFile,
-    toggleFavorite
+    toggleFavorite,
+    getFilesByDate
 };
