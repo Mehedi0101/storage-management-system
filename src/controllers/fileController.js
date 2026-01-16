@@ -168,9 +168,100 @@ const deleteFile = async (req, res) => {
 };
 
 
+// get recently uploaded contents (limit 5)
+const getRecentUploads = async (req, res) => {
+    try {
+        const files = await File.find({ user: req.user._id })
+            .sort({ createdAt: -1 })
+            .limit(5);
+
+        res.status(200).json({
+            success: true,
+            data: files,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch recent uploads",
+        });
+    }
+};
+
+// get all images
+const getAllImages = async (req, res) => {
+    try {
+        const images = await File.find({
+            user: req.user._id,
+            fileType: "image",
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: images,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch images",
+        });
+    }
+};
+
+// get all pdfs
+const getAllPdfs = async (req, res) => {
+    try {
+        const pdfs = await File.find({
+            user: req.user._id,
+            fileType: "pdf",
+        }).sort({ createdAt: -1 });
+
+        res.status(200).json({
+            success: true,
+            data: pdfs,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch PDFs",
+        });
+    }
+};
+
+// get a file by it's id
+const getFileById = async (req, res) => {
+    try {
+        const file = await File.findOne({
+            _id: req.params.id,
+            user: req.user._id,
+        });
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: "File not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: file,
+        });
+    } catch (error) {
+        res.status(400).json({
+            success: false,
+            message: "Invalid file ID",
+        });
+    }
+};
+
+
 module.exports = {
     uploadFile,
     toggleFavorite,
     getFilesByDate,
-    deleteFile
+    deleteFile,
+    getRecentUploads,
+    getAllImages,
+    getAllPdfs,
+    getFileById
 };
