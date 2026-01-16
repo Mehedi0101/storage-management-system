@@ -33,6 +33,44 @@ const uploadFile = async (req, res) => {
     }
 };
 
+const toggleFavorite = async (req, res) => {
+    try {
+        const { fileId } = req.params;
+
+        const file = await File.findOne({
+            _id: fileId,
+            user: req.user._id, // ownership enforcement
+        });
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: "File not found",
+            });
+        }
+
+        file.isFavorite = !file.isFavorite;
+        await file.save();
+
+        res.status(200).json({
+            success: true,
+            message: file.isFavorite
+                ? "Added to favorites"
+                : "Removed from favorites",
+            data: {
+                fileId: file._id,
+                isFavorite: file.isFavorite,
+            },
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to update favorite status",
+        });
+    }
+};
+
 module.exports = {
     uploadFile,
+    toggleFavorite
 };
