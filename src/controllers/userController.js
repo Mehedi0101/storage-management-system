@@ -117,8 +117,34 @@ const deleteUser = async (req, res) => {
     }
 };
 
+
+// get current user info
+const getCurrentUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select("-password");
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found",
+            });
+        }
+
+        res.status(200).json({
+            success: true,
+            data: user,
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to fetch user",
+        });
+    }
+};
+
 module.exports = {
     updateUser,
     changePassword,
-    deleteUser
+    deleteUser,
+    getCurrentUser
 };

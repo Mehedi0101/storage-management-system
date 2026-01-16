@@ -1,7 +1,7 @@
 const express = require("express");
 const authMiddleware = require("../middlewares/authMiddlewares");
 const upload = require("../middlewares/uploadMiddleware");
-const { uploadFile, toggleFavorite, getFilesByDate, deleteFile } = require("../controllers/fileController");
+const { uploadFile, toggleFavorite, getFilesByDate, deleteFile, getRecentUploads, getAllImages, getAllPdfs, getFileById } = require("../controllers/fileController");
 
 const fileRouter = express.Router();
 
