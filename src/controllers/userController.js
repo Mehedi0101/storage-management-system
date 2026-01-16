@@ -103,7 +103,7 @@ const deleteUser = async (req, res) => {
         await User.findByIdAndDelete(req.user._id);
 
         // Clear cookie
-        res.clearCookie("accessToken");
+        res.clearCookie("token");
 
         res.status(200).json({
             success: true,
