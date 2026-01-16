@@ -6,7 +6,6 @@ const User = require("../models/User");
 const { generateToken } = require("../utils/jwt");
 const PasswordReset = require("../models/PasswordReset");
 const generateCode = require("../utils/generateCode");
-const sendEmail = require("../utils/codeSendingEmail");
 
 
 // register
@@ -126,17 +125,14 @@ const forgotPassword = async (req, res, next) => {
             expiresAt: new Date(Date.now() + 10 * 60 * 1000),
         });
 
-        // send code through email
-        await sendEmail({
-            to: email,
-            subject: "Password Reset Code",
-            text: `Your password reset code is ${code}`,
-        });
-
         // success response
         res.status(200).json({
             success: true,
-            message: "Verification code sent",
+            message: {
+                to: email,
+                subject: "Password Reset Code",
+                text: `Your password reset code is ${code}`,
+            }
         });
     } catch (error) {
         next(error);

@@ -1,8 +1,0 @@
-const sendEmail = async ({ to, subject, text }) => {
-    console.log("Email sent");
-    console.log("To:", to);
-    console.log("Subject:", subject);
-    console.log("Text:", text);
-};
-
-module.exports = sendEmail;
