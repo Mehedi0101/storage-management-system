@@ -1,5 +1,13 @@
+// external imports
+const fs = require("fs");
+const path = require("path");
+
+// internal imports
 const File = require("../models/File");
 
+
+
+// file upload controller
 const uploadFile = async (req, res) => {
     try {
         if (!req.file) {
@@ -33,6 +41,8 @@ const uploadFile = async (req, res) => {
     }
 };
 
+
+// toggle favorite controller
 const toggleFavorite = async (req, res) => {
     try {
         const { fileId } = req.params;
@@ -70,6 +80,8 @@ const toggleFavorite = async (req, res) => {
     }
 };
 
+
+// get files by date controller
 const getFilesByDate = async (req, res) => {
     try {
         const { date } = req.query;
@@ -110,8 +122,50 @@ const getFilesByDate = async (req, res) => {
 };
 
 
+// delete file controller
+const deleteFile = async (req, res) => {
+    try {
+        const { fileId } = req.params;
+
+        // find file with ownership check
+        const file = await File.findOne({
+            _id: fileId,
+            user: req.user._id,
+        });
+
+        if (!file) {
+            return res.status(404).json({
+                success: false,
+                message: "File not found",
+            });
+        }
+
+        // delete from disk
+        const absolutePath = path.resolve(file.path);
+
+        if (fs.existsSync(absolutePath)) {
+            fs.unlinkSync(absolutePath);
+        }
+
+        // delete from DB
+        await file.deleteOne();
+
+        res.status(200).json({
+            success: true,
+            message: "File deleted successfully",
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: "Failed to delete file",
+        });
+    }
+};
+
+
 module.exports = {
     uploadFile,
     toggleFavorite,
-    getFilesByDate
+    getFilesByDate,
+    deleteFile
 };
