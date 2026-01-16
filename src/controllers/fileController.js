@@ -4,6 +4,7 @@ const path = require("path");
 
 // internal imports
 const File = require("../models/File");
+const User = require("../models/User");
 
 
 
@@ -27,6 +28,10 @@ const uploadFile = async (req, res) => {
             mimeType: req.file.mimetype,
             size: req.file.size,
             path: req.file.path,
+        });
+
+        await User.findByIdAndUpdate(req.user._id, {
+            $inc: { usedStorage: req.file.size },
         });
 
         res.status(201).json({
